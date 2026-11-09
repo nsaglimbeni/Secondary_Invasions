@@ -1,0 +1,53 @@
+---
+title: "Wetland Surveys"
+author: "Nick Saglimbeni"
+date: "2026-11-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+cojo_wet <- read.csv("data_cojo_wetlands/Wetlands_Revised_2025.csv")
+print(unique(cojo_wet$Topography.Type))
+
+cojo_wet_flat <- cojo_wet %>%
+  filter(Topography.Type== "Flat") %>%
+  filter(Absolute.Pct.Cover.of.J..phaeocephalus>0) %>%
+  filter(NRCS.Soil.Texture == "CONCEPCION LOAMY SAND, 0 TO 5 PERCENT SLOPES") %>%
+  filter(Area.in.2025..sq.ft. > 1000) %>%
+  filter(Area.in.2025..sq.ft. < 100000) 
+
+cojo_wet_flat_species <- cojo_wet_flat %>%
+  mutate(row_id = row_number()) %>%
+  separate_rows(Plant.List.with.Wetland.Indicators.and.Rel.Pct, sep = ",\\s*") %>%
+  mutate(
+    Species = str_trim(str_extract(Plant.List.with.Wetland.Indicators.and.Rel.Pct, "^[^/]+")),
+    Indicator = str_trim(
+      str_match(Plant.List.with.Wetland.Indicators.and.Rel.Pct, "/\\s*([^()]+)\\s*\\(")[, 2]
+    ),
+    Cover = as.numeric(
+      str_match(Plant.List.with.Wetland.Indicators.and.Rel.Pct, "\\(([0-9.]+)%\\)")[, 2]
+    )
+  )
+
+dominant_species <- cojo_wet_flat_species %>%
+  group_by(row_id) %>%
+  slice_max(Cover, n = 3, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(row_id, Dominant_Species = Species,
+         Dominant_Cover = Cover) %>%
+  filter(Dominant_Species == "Carpobrotus edulis" | Dominant_Species == "Ehrharta calycina" | Dominant_Species == "Bromus diandrus" 
+         | Dominant_Species == "Festuca perennis" | Dominant_Species == "Avena barbata" | Dominant_Species == "Annual invasive grasses")  %>%
+  group_by(row_id) %>%
+  slice_max(Dominant_Cover, n = 1, with_ties = F) %>%
+  ungroup()
+```
+
+
