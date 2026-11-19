@@ -1,0 +1,163 @@
+Code,Latin,Common,History,Group
+ABUM,Abronia umbellata,Pink sand verbena,Native,Forb_N
+ACMI,Achillea millefolium,common yarrow,Native,Forb_N
+ACAM,Acmispon americanus,Spanish Clover,Native,Forb_N
+ACGL,Acmispon glaber,Deerweed,Native,Shrub_N
+ACJU,Acmispon junceus,Lotus junceus,Native,Shrub_N
+ACST,Acmispon strigosus,Hairy Lotus,Native,Forb_N
+AECY,Aegilops cylindrica,Goat grass,Nonnative,Grass_NN
+AMCH,Ambrosia chamissonis,Ragweed,Native,Forb_N
+AMSP,Amsinckia spectabilis,Fiddleneck,Native,Forb_N
+AP sp.,Aphyllon ssp.,broom rape,Native,Forb_N
+ARCA,Artemisia californica,California sagebrush,Native,Shrub_N
+ASNU,Astragalus nuttallii,Nuttal's milkvetch,Native,Forb_N
+ATSE,Atriplex semibaccata,austrailian salt bush,Nonnative,Forb_NN
+AVFA,Avena fatua,wild oat,Nonnative,Grass_NN
+BAPA,Baccharis pilularis,coyote bush,Native,Shrub_N
+BG,Bare ground,Bare ground,Substrate,Substrate
+BG-G,Bare ground - gopher,Bare ground - gopher,Substrate,Substrate
+BRADIS,Brachypodium distachyon,Purple false brome,Nonnative,Grass_NN
+BRNI,Brassica nigra,black mustard,Nonnative,Forb_NN
+BRCA,Bromus carinatus,CA brome grass,Native,Grass_N
+BROCAT,Bromus catharticus,rescuegrass,Nonnative,Grass_NN
+BRDI,Bromus diandrus,ripgut brome,Nonnative,Grass_NN
+BRHO,Bromus hordeaceus,soft chest brome,Nonnative,Grass_NN
+BRMA,Bromus madritensis,red brome,Nonnative,Grass_NN
+CAKMAR,Cakile maritima,Sea rocket,Nonnative,Forb_NN
+CAME,Calandrinia menziesii,Redmaids,Native,Forb_N
+CAMA,Calystegia macrostegia,coast morning glory,Native,Forb_N
+CACH,Camissoniopsis cheiranthifolia,Beach evening primrose,Native,Forb_N
+CAMI,Camissoniopsis micrantha,Miniature suncup,Native,Forb_N
+CABU,Capsella bursa-pastoris,shepherd's purse,Nonnative,Forb_NN
+CAPY,Carduus pycnocephalus,Italian Thissle,Nonnative,Forb_NN
+CAPA,Carex pansa,sand dune sedge,Native,Sedge_N
+CAED,Carpobrotus edulis,Iceplant,Nonnative,CAED
+CEME,Centaurea melitensis,tocolote,Nonnative,Forb_NN
+CHCA,Chenopodium californicum,california goosefoot,Native,Forb_N
+CHLI,Chenopodium littoreum,coastal goosefoot,Native,Forb_N
+CHMU,Chenopodium murale,nettle leaf goosefoot,Nonnative,Forb_NN
+CIOC,Cirsium occidentale,cobweb thistle,Native,Forb_N
+CIVU,Cirsium vulgare,Spear Thistle,Nonnative,Forb_NN
+Clark sp.,Clarkia ssp.,clarkia,Native,Forb_N
+CLPE,Claytonia perfoliata,Miners Lettuce,Native,Forb_N
+COMA,Conium maculatum,poison hemlock,Nonnative,Forb_NN
+COFI,Corethrogyne filaginifolia,california aster,Native,Forb_N
+COCO,Cotula coronopifolia,Brass Button,Nonnative,Forb_NN
+CRCO,Crassula connata,sand pygmy weed,Native,Forb_N
+CRCA,Croton californicus,California croton,Native,Forb_N
+CRSE,Croton setigerus,doveweed,Native,Forb_N
+Crypt sp.,Cryptantha ssp.,Popcorn flower,Native,Forb_N
+CUCA,Cuscuta californica,chaparral dodder,Native,Forb_N
+CYER,Cyperus eragrostis,tall flatsedge,Native,Sedge_N
+DAGL,Dactylis glomerata,orchard grass,Nonnative,Grass_NN
+DAPH,Daucus pusillus,Wild American Carrot,Native,Forb_N
+DIP,Dead iceplant,Dead iceplant,Substrate,Substrate
+DEIN,Deinandra increscens ssp. villosa,gaviota tarplant,Native,Forb_N
+DEPI,Descurainia pinnata,Tansy mustard,Native,Forb_N
+DICA,Dichelostemma capitatum,Blue Dicks,Native,Forb_N
+DILO,Diplacus longiflorus,southern bush monkey flower,Native,Shrub_N
+DISP,Distichlis spicata,salt grass,Native,Grass_N
+Dud sp.,Dudleya ssp.,california liveforever,Native,Forb_N
+DYAM,Dysphania ambrosiodes,mexican tea,Nonnative,Forb_NN
+Echin sp.,Echinochloa ssp.,barnyard grasses,Nonnative,Grass_NN
+EHCA,Ehrharta calycina,purple veldt grass,Nonnative,Grass_NN
+ELGL,Elymus glaucus,blue wild rye,Native,Grass_N
+ELPA,Elymus pacificus,Pacific wild rye,Native,Grass_N
+ELTR,Elymus triticoides,creeping wild rye,Native,Grass_N
+ENCA,Encelia californica,california bush sunflower,Native,Shrub_N
+EPBR,Epilobium brachycarpum,tall willowherb,Native,Forb_N
+EPCI,Epilobium ciliatum,Fringed willowherb,Native,Forb_N
+ERER,Ericameria ericoides,California Goldenbush,Native,Shrub_N
+ERBO,Erigeron bonariensis,fleabane,Nonnative,Forb_NN
+ERCA,Erigeron canadensis,horseweed,Native,Forb_N
+ERPA,Eriogonum parvifolium,seacliff buckwheat,Native,Shrub_N
+ERST,Eriophyllum staechadifolium,Seaside woolly sunflower,Native,Shrub_N
+Erodium sp.,Erodium ssp.,Filaree/stork's bill,Nonnative,Forb_NN
+ERFL,Erythranthe floribundus,Many flowered monkey flower,Native,Forb_N
+ESCA,Eschscholzia californica,California Poppy,Native,Forb_N
+ERCA,Extriplex californica,California saltbush,Native,Forb_N
+FEAR,Festuca arundinacea,Tall Fescue,Nonnative,Grass_NN
+FEMY,Festuca myuros,Vulpia myuros,Nonnative,Grass_NN
+FEPE,Festuca perennis,Italian ryegrass,Nonnative,Grass_NN
+FOVU,Foeniculum vulgare,wild fennel,Nonnative,Forb_NN
+FRSA,Frankenia salina,alkali heath,Native,Forb_N
+GAAP,Galium aparine,common bedstraw,Native,Forb_N
+GAUS,Gamochaeta ustulata,featherweed,Native,Forb_N
+GEDI,Geranium dissectum,cranesbill,Nonnative,Forb_NN
+GRCA,Grindelia camporum,gum plant,Native,Forb_N
+HEPU,Helenium puberulum,sneezeweed,Native,Forb_N
+HEEQ,Helminthotheca echioides,bristly oxtongue,Nonnative,Forb_NN
+HIIN,Hirschfeldia incana,shortpod mustard,Nonnative,Forb_NN
+HOBR,Hordeum brachyantherum,meadow barley,Native,Grass_N
+HOMU,Hordeum murinum,wall barley (foxtail),Nonnative,Grass_NN
+HYGL,Hypochaeris glabra,Smooth Cat's Ear,Nonnative,Forb_NN
+ISME,Isocoma menziesii,menzie's goldenbush,Native,Shrub_N
+JUBU,Juncus bufonius,Toad Rush,Native,Rush_N
+JUME,Juncus mexicanus,mexican rush,Native,Rush_N
+JUPH,Juncus phaeocephalus,Brown-headed rush,Native,Rush_N
+LASE,Lactuca serriola,prickly lettuce,Nonnative,Forb_NN
+LACO,Laennecia coulteri,Coulter's horseweed,Native,Forb_N
+LAAU,Lamarickia aurea,goldentop grass,Nonnative,Grass_NN
+LAGR,Lasthenia gracilis,Goldfields,Native,Forb_N
+Laylia sp.,Laylia ssp.,tidy tips,Native,Forb_N
+LEGI,Leptosyne gigantea,giant coreopsis,Native,Shrub_N
+LOGA,Logfia gallica,Narrowleaf cottonrose,Nonnative,Forb_NN
+LUAR,Lupinus arboreus,Bush Lupin,Native,Shrub_N
+LUBI,Lupinus bicolor,miniature lupine,Native,Forb_N
+LYAR,Lysimachia arvensis,Scarlet Pimpernel,Nonnative,Forb_NN
+LYHY,Lythrum hyssopifolia,Hyssop loosestrife,Nonnative,Forb_NN
+MASA,Madia sativa,Chile tarweed,Native,Forb_N
+MAPA,Malva parviflora,cheeseweed,Nonnative,Forb_NN
+MAFA,Marah fabacea,California Manroot,Native,Forb_N
+MEPO,Medicago polymorpha,Burr clover,Nonnative,Forb_NN
+MEIN,Melilotus indicus,sweet clover,Nonnative,Forb_NN
+MECR,Mesembryanthemum crystallinum,Crystalline iceplant,Nonnative,Forb_NN
+NUTE,Nuttallanthus texanus,Texas Toadflax,Native,Forb_N
+PHDI,Phacelia distans,Distant Phacelia,Native,Forb_N
+PHAQ,Phalaris aquatica,harding grass,Nonnative,Grass_NN
+PLCO,Plantago coronopus,Buck's-horn plantain,Nonnative,Forb_NN
+PLLA,Plantago lanceolata,english plantain,Nonnative,Forb_NN
+POAV,Polygonum aviculare ssp. depressum,Prostrate knotweed,Nonnative,Forb_NN
+POMO,Polypogon monspeliensis,Annual beard-grass,Nonnative,Grass_NN
+PSBE,Pseudognaphalium beneolens,cudweed,Native,Forb_N
+PSBI,Pseudognaphalium bioletti,two-color rabbit-tobacco,Native,Forb_N
+PSCA,Pseudognaphalium californicum,California cudweed,Native,Forb_N
+PSCAN,Pseudognaphalium canescens,Wright's cudweed,Native,Forb_N
+PSLU,Pseudognaphalium luteoalbum,Jersey cudweed,Nonnative,Forb_NN
+PSRA,Pseudognaphalium ramosissimum,pink cudweed,Native,Forb_N
+PSST,Pseudognaphalium stramineum,Chilean Cudweed,Native,Forb_N
+PTDR,Pterostegia drymarioides,woodland threadstem,Native,Forb_N
+RAFCAL,Rafinesquia californica,California Chicory,Native,Forb_N
+RACA,Ranunculus californicus,california buttercup,Native,Forb_N
+RASA,Raphanus sativus,Wild Radish,Nonnative,Forb_NN
+ROCA,Rosa californica,california wild rose,Native,Shrub_N
+RUAC,Rumex acetosella,Red sorrel,Nonnative,Forb_NN
+RUCR,Rumex crispus,Curly Dock,Nonnative,Forb_NN
+RUPU,Rumex pulcher,fiddle dock,Nonnative,Forb_NN
+RUSA,Rumex salicifolius,Willow dock,Native,Forb_N
+SALA,Salix laevigata,red willow,Native,Shrub_N
+SAME,Sambucus mexicana,blue elderberry,Native,Shrub_N
+SCCA,Scrophularia californica,California Bee Plant,Native,Forb_N
+SECA,Senecio californicus,California butterweed,Native,Forb_N
+SEGL,Senecio glomeratus,cutleaf burnweed,Nonnative,Forb_NN
+SEVU,Senecio vulgaris,Common groundsel,Nonnative,Forb_NN
+SIGA,Silene gallica,windmill pink,Nonnative,Forb_NN
+SIMA,Silybum marianum,milk thistle,Nonnative,Forb_NN
+SIOR,Sisymbrium orientale,Indian hedge mustard,Nonnative,Forb_NN
+SODO,Solanum douglasii,Greenspot Nightshade,Native,Forb_N
+SOXA,Solanum xanti,chaparral nightshade,Native,Forb_N
+Sonch sp.,Sonchus ssp.,Sow thistle,Nonnative,Forb_NN
+SPAR,Spergula arvensis,corn spurry,Nonnative,Forb_NN
+SPMA,Spergularia macrotheca,large flowered sand spurry,Native,Forb_N
+Sperg sp.,Spergularia ssp.,sand spurry,Nonnative,Forb_NN
+STME,Stellaria media,chickweed,Nonnative,Forb_NN
+STVI,Stephanomeria virgata,wirelettuce,Native,Forb_N
+STPU,Stipa pulchra,purple needle grass,Native,Grass_N
+TETE,Tetragonia tetragonioides,new zealand spinach,Nonnative,Forb_NN
+Thatch,Thatch,Thatch,Substrate,Substrate
+TODI,Toxicodendron diversilobum,poison oak,Native,Shrub_N
+Tri sp.,Trifolium ssp.,clovers,Nonnative,Forb_NN
+UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN
+URUR,Urtica urens,stinging nettle,Nonnative,Forb_NN
+VELA,Verbena lasiostachys,western vervain,Native,Forb_N
+XASP,Xanthium spinosum,spiny cocklebur,Nonnative,Forb_NN

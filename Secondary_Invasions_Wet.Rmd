@@ -1,0 +1,544 @@
+---
+title: "Wetland_Secondary_Invasions"
+author: "Nick Saglimbeni"
+date: "2026-11-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+library(tidyverse)
+library(ggpubr)
+library(glmmTMB)
+# library(emmeans)
+# library(DHARMa)
+```
+
+```{r data}
+## begin 2022 - this is a lot, but mostly renaming and combining things. original surveys were done with survey123 and produced weirdly formatted outputs which is why things are separated by plant natural history status. 
+
+# read in raw data frames
+summary_22_salvage <- read.csv("data22/data2022salvage.csv")
+summary_22_salvage_native <- read.csv("data22/data2022salvage_natives.csv")
+summary_22_salvage_nonnative <- read.csv("data22/data2022salvage_nonnatives.csv")
+summary_22_salvage_unknown <- read.csv("data22/data2022salvage_unknown.csv")
+
+# this basically just gets block names 
+Salv_22 <- summary_22_salvage %>%
+  select(GlobalID, Block.Name, Unlisted.Block, Plot.Name, Transect.Start.Time, Transect.Finish.Time, Monitor.Names) %>%
+  distinct() %>%
+  mutate(Block.Name = case_when(Block.Name == "UNLISTED" ~ Unlisted.Block, 
+                                TRUE ~ Block.Name)) %>%
+  mutate(Block.Name = str_replace_all(Block.Name, " ", "")) %>%
+  mutate(Block.Name = case_when(str_starts(Block.Name, "Vege") ~ "VD", 
+                                str_starts(Block.Name, "Treat") ~ "TD", 
+                                str_starts(Block.Name, "vege") ~ "VD", 
+                                str_starts(Block.Name, "Grass") ~ "GRASS1", 
+                                TRUE ~ Block.Name)) %>%
+  rename(ParentGlobalID = GlobalID) %>%
+  mutate(PLOTID = paste(Block.Name, Plot.Name, sep = "_"))
+
+#substrate
+Salv_22_S <- summary_22_salvage %>%
+  select(GlobalID, Block.Name, Unlisted.Block, Plot.Name, Percent.Bare.Ground.and.Thatch, Percent.Dead.Iceplant) %>%
+  distinct() %>%
+  mutate(Block.Name = case_when(Block.Name == "UNLISTED" ~ Unlisted.Block, 
+                                TRUE ~ Block.Name)) %>%
+  mutate(Block.Name = str_replace_all(Block.Name, " ", "")) %>%
+  mutate(Block.Name = case_when(str_starts(Block.Name, "Vege") ~ "VD", 
+                                str_starts(Block.Name, "Treat") ~ "TD", 
+                                str_starts(Block.Name, "vege") ~ "VD", 
+                                str_starts(Block.Name, "Grass") ~ "GRASS1", 
+                                TRUE ~ Block.Name)) %>%
+  rename(ParentGlobalID = GlobalID) %>%
+  mutate(PLOTID = paste(Block.Name, Plot.Name, sep = "_")) %>%
+  pivot_longer(c(Percent.Bare.Ground.and.Thatch, Percent.Dead.Iceplant), names_to = "Species", values_to = "X.Cover") %>%
+  mutate(Species = case_when(Species == "Percent.Bare.Ground.and.Thatch" ~ "Bare ground and thatch", 
+                             T ~ "Dead iceplant")) %>%
+  mutate(History = "Substrate") %>%
+  select(ParentGlobalID, Species, X.Cover, History)
+
+
+#native species and some renaming
+Salv_22_N <- summary_22_salvage_native %>%
+  select(ParentGlobalID, Native.Species, Unlisted.Native.Species, Native.Species.Percent.Cover) %>%
+  distinct() %>%
+  filter(Native.Species.Percent.Cover != 0) %>%
+  mutate(History = "Native") %>%
+  rename(X.Cover = Native.Species.Percent.Cover) %>%
+  rename(Species = Native.Species) %>%
+  mutate(Species = case_when(str_starts(Unlisted.Native.Species, "TODI") ~ "Toxicodendron diversilobum", 
+                             str_starts(Unlisted.Native.Species, "Gaviota") ~ "Deinandra increscens ssp. villosa", 
+                             str_starts(Unlisted.Native.Species, "gaviota") ~ "Deinandra increscens ssp. villosa", 
+                             str_starts(Unlisted.Native.Species, "Dein") ~ "Deinandra increscens ssp. villosa",  
+                             str_starts(Unlisted.Native.Species, "Cusc") ~ "Cuscuta californica", 
+                             str_starts(Unlisted.Native.Species, "Acmis") ~ "Acmispon junceaus", 
+                             str_starts(Unlisted.Native.Species, "pseud") ~ "Pseudognaphalium bioletii", 
+                             str_starts(Unlisted.Native.Species, "Eriop") ~ "Eriophyllum staechadifolium", 
+                             str_starts(Unlisted.Native.Species, "Dudl") ~ "Dudleya sp.", 
+                             str_starts(Unlisted.Native.Species, "dein") ~ "Deinandra increscens ssp. villosa",
+                             TRUE ~ Species)) %>%
+  select(-Unlisted.Native.Species) %>%
+  distinct()
+
+#nonnative species and renaming
+Salv_22_NN <- summary_22_salvage_nonnative %>%
+  select(ParentGlobalID, Non_Native.Species, Unlisted.Non.Native.Species, Non.Native.Species.Percent.Cover) %>%
+  distinct() %>%
+  filter(Non.Native.Species.Percent.Cover != 0) %>%
+  mutate(History = "Nonnative") %>%
+  rename(X.Cover = Non.Native.Species.Percent.Cover) %>%
+  rename(Species = Non_Native.Species) %>%
+  mutate(Species = case_when(str_starts(Unlisted.Non.Native.Species, "Star") ~ "Centaurea melitensis", 
+                             str_starts(Unlisted.Non.Native.Species, "Erh") ~ "Ehrharta calycina", 
+                             str_starts(Unlisted.Non.Native.Species, "Cent") ~ "Centaurea melitensis", 
+                             TRUE ~ Species)) %>%
+  select(-Unlisted.Non.Native.Species) %>%
+  distinct()
+
+#species that were unknown at the time of surveying. I looked back and renamed these to represent true IDs
+Salv_22_Unk <- summary_22_salvage_unknown %>%
+  select(ParentGlobalID, Unknown.Species.Description, Unknown.Species.Percent.Cover) %>%
+  distinct() %>%
+  filter(Unknown.Species.Percent.Cover != 0) %>%
+  rename(X.Cover = Unknown.Species.Percent.Cover) %>%
+  rename(Species = Unknown.Species.Description) %>%
+  mutate(History = case_when(Species == "Eriophyllum staechadifolium" | Species == "Daucus pusillus" | 
+                               Species == "Corethrogyne filaginifolia" | Species == "Cardionema ramosissimum" | 
+                               Species == "Pseudognaphalium beneolens" | Species == "Stephanomeria virgata" ~ "Native", 
+                             TRUE ~ "Nonnative")) %>%
+  filter(Species != "UNKNOWN")
+
+#combining dfs
+Salv_22_full <- merge(Salv_22_N, Salv_22_NN, all = T)
+Salv_22_full <- merge(Salv_22_full, Salv_22_Unk, all = T)
+Salv_22_full <- merge(Salv_22_full, Salv_22_S, all = T)
+
+Salv_22_full <- Salv_22_full %>%
+  left_join(Salv_22) %>%
+  select(-Unlisted.Block)
+
+
+# repeat above for 2nd survey format
+
+summary_22_salvage_B <- read.csv("data22/data2022salvageB.csv")
+summary_22_salvage_native_B <- read.csv("data22/data2022salvageB_natives.csv")
+summary_22_salvage_nonnative_B <- read.csv("data22/data2022salvageB_nonnatives.csv")
+summary_22_salvage_unknown_B <- read.csv("data22/data2022salvageB_unknown.csv")
+
+Salv_22_B <- summary_22_salvage_B %>%
+  select(GlobalID, Block.Name, Plot.Name, Transect.Start.Time, Transect.Finish.Time, Monitor.Names) %>%
+  distinct()  %>%
+  mutate(Block.Name = str_replace_all(Block.Name, " ", "")) %>%
+  rename(ParentGlobalID = GlobalID) %>%
+  mutate(PLOTID = paste(Block.Name, Plot.Name, sep = "_"))
+
+Salv_22_S_B <- summary_22_salvage_B %>%
+  select(GlobalID, Block.Name, Unlisted.Block, Plot.Name, Bare.Ground, Percent.Dead.Iceplant) %>%
+  distinct() %>%
+  mutate(Block.Name = case_when(Block.Name == "UNLISTED" ~ Unlisted.Block, 
+                                TRUE ~ Block.Name)) %>%
+  mutate(Block.Name = str_replace_all(Block.Name, " ", "")) %>%
+  mutate(Block.Name = case_when(str_starts(Block.Name, "Vege") ~ "VD", 
+                                str_starts(Block.Name, "Treat") ~ "TD", 
+                                str_starts(Block.Name, "vege") ~ "VD", 
+                                str_starts(Block.Name, "Grass") ~ "GRASS1", 
+                                TRUE ~ Block.Name)) %>%
+  rename(ParentGlobalID = GlobalID) %>%
+  mutate(PLOTID = paste(Block.Name, Plot.Name, sep = "_")) %>%
+  pivot_longer(c(Bare.Ground, Percent.Dead.Iceplant), names_to = "Species", values_to = "X.Cover") %>%
+  mutate(Species = case_when(Species == "Bare.Ground" ~ "Bare ground and thatch", 
+                             T ~ "Dead iceplant")) %>%
+  mutate(History = "Substrate") %>%
+  select(ParentGlobalID, Species, X.Cover, History)
+
+Salv_22_N_B <- summary_22_salvage_native_B %>%
+  select(ParentGlobalID, Native.Species, Unlisted.Native.Species, Native.Species.Percent.Cover) %>%
+  distinct() %>%
+  filter(Native.Species.Percent.Cover != 0) %>%
+  mutate(History = "Native") %>%
+  rename(X.Cover = Native.Species.Percent.Cover) %>%
+  rename(Species = Native.Species) %>%
+  mutate(Species = case_when(str_starts(Unlisted.Native.Species, "Dein") ~ "Deinandra increscens ssp. villosa", 
+                             str_starts(Unlisted.Native.Species, "Acmi") ~ "Acmispon strigosus",
+                             TRUE ~ Species)) %>%
+  select(-Unlisted.Native.Species) %>%
+  distinct()
+
+Salv_22_NN_B <- summary_22_salvage_nonnative_B %>%
+  select(ParentGlobalID, Non_Native.Species, Non.Native.Species.Percent.Cover) %>%
+  distinct() %>%
+  filter(Non.Native.Species.Percent.Cover != 0) %>%
+  mutate(History = "Nonnative") %>%
+  rename(X.Cover = Non.Native.Species.Percent.Cover) %>%
+  rename(Species = Non_Native.Species) %>%
+  distinct()
+
+Salv_22_Unk_B <- summary_22_salvage_unknown_B %>%
+  select(ParentGlobalID, Unknown.Species.Description, Unknown.Species.Percent.Cover) %>%
+  distinct() %>%
+  filter(Unknown.Species.Percent.Cover != 0) %>%
+  rename(X.Cover = Unknown.Species.Percent.Cover) %>%
+  rename(Species = Unknown.Species.Description) %>%
+  mutate(History = "Native")
+
+Salv_22_full_B <- merge(Salv_22_N_B, Salv_22_NN_B, all = T)
+Salv_22_full_B <- merge(Salv_22_full_B, Salv_22_Unk_B, all = T)
+Salv_22_full_B <- merge(Salv_22_full_B, Salv_22_S_B, all = T)
+
+Salv_22_full_B <- Salv_22_full_B %>%
+  left_join(Salv_22_B)
+
+#final combination
+Salv_22_full_final <- merge(Salv_22_full, Salv_22_full_B, all = T)
+
+#making sure spelling and names match future formatting
+data_22_full_final <- Salv_22_full_final %>%
+  mutate(Species = str_replace(Species, "_", " ")) %>%
+  mutate(Species = case_when(Species == "Acimispon glabor" ~ "Acmispon glaber", 
+                             Species == "Calystegia macrostegia_cyclos." ~ "Calystegia macrostegia", 
+                             Species == "Sonchus sp" ~ "Sonchus spp.", 
+                             Species == "Sonchus asper" ~ "Sonchus spp.", 
+                             Species == "Spergularia sp" ~ "Spergularia spp.", 
+                             Species == "Centaurium sp." ~ "Centaurea melitensis", 
+                             Species == "Abronia maritima" ~ "Abronia umbellata", 
+                             Species == "Acimispon maritimus" ~ "Acmispon strigosus", 
+                             Species == "Acimispon strigosus" ~ "Acmispon strigosus", 
+                             Species == "Avena barbata" ~ "Avena spp.", 
+                             Species == "Avena fatua" ~ "Avena spp.", 
+                             Species == "Carpobrotus chilensis" ~ "Carpobrotus edulis", 
+                             Species == "Cuscuta salina" ~ "Cuscuta californica", 
+                             Species == "ehrharta calycina" ~ "Ehrharta calycina", 
+                             Species == "Eriogonum fasciculatum" ~ "Eriogonum parvifolium", 
+                             Species == "Erodium cicutarium" ~ "Erodium spp.", 
+                             Species == "Erodium botrys" ~ "Erodium spp.", 
+                             Species == "Hordeum brachyantherum_calif." ~ "Hordeum brachyantherum", 
+                             Species == "Hordeum marinum" ~ "Hordeum murinum", 
+                             Species == "Hypochaeris radicata" ~ "Hypochaeris glabra", 
+                             Species == "Sonchus oleraceus" ~ "Sonchus spp.", 
+                             Species == "Spergularia sp." ~ "Spergularia spp.", 
+                             Species == "unlisted" ~ "UNKNOWN", 
+                             TRUE ~ Species)) %>%
+  filter(Species != "UNKNOWN") %>%
+  select(-c(ParentGlobalID, Transect.Start.Time, Transect.Finish.Time, Monitor.Names))
+
+## end 2022
+
+## begin 2023
+
+data2023 <- read.csv("data23/2023_veg_data.csv")
+specieslist2023 <- read.csv("data23/specieslist.csv")
+subplots2023 <- read.csv("data23/subplots.csv")
+
+#rename column 2
+colnames(data2023)[2] = "Subplot"
+
+#remove data_type column
+data2023 <- data2023[, -5]
+
+#replace missing erigeron cover
+data2023 <- data2023 %>% replace_na(list(X.Cover = 1))
+
+#left join data frames to create data_type column
+data2023 <- merge(x = data2023, y = specieslist2023, all.x = TRUE)
+
+data2023 <- data2023 %>% 
+  mutate(Data.type = case_when(
+    startsWith(data2023$Data.type, "Non") ~ "Nonnative",
+    startsWith(data2023$Data.type, "Substrate") ~ "Substrate",
+    startsWith(data2023$Data.type, "Native") ~ "Native"))
+
+# end 23
+
+#begin 24
+
+data24 <- read.csv("data24/data2024.csv")
+plotinfo24 <- read.csv("data24/plotinfo2024.csv")
+species24 <- read.csv("data24/species24.csv")
+
+#contains unknowns
+data24 <- data24 %>%
+  mutate(STRIP = replace_na(STRIP, "Control"))
+
+data_plots <- data24 %>%
+  left_join(plotinfo24, by = c("Block_Name", "Subplot", "STRIP")) 
+
+species24 <- species24 %>%
+  rename(Substrate.Species = Latin)
+
+plotinfo24 <- plotinfo24 %>%
+  mutate(STRIP = replace_na(STRIP, "Control"))
+
+# end 24
+
+# begin 2025
+
+data25 <- read.csv("data25/data25.csv") %>%
+  rename(Block_Name = Block) %>%
+  rename(Subplot = Plot) %>%
+  rename(STRIP = Strip) 
+plotinfo25 <- read.csv("data25/PLOTINFO25.csv")
+species25 <- read.csv("data25/species25.csv")
+# effort <- read.csv("data25/effort_strips24.csv")
+# pole_ID <- read.csv("data25/POLE_ID.csv")
+
+data25 <- data25 %>%
+  left_join(plotinfo25) %>%
+  left_join(species25) %>%
+  distinct()
+
+data_1percent <- data25 %>%
+  mutate(Cover = case_when(Cover == "<1" ~ "1", 
+                           T ~ Cover)) %>%
+  dplyr::mutate(Cover = as.numeric(Cover))
+
+# end 25
+
+# begin 2026
+
+data26 <- read.csv("data26/data26.csv")
+species26 <- read.csv("data26/Species26.csv") %>%
+  mutate(Species = Code)
+
+data26 <- data26 %>%
+  left_join(species26)
+
+# end 2026
+```
+
+```{r combine data and some checks}
+# create single data frame across years for wetland blocks. i do not need dune or css data for this chapter. 
+
+W_22 <- data_22_full_final %>%
+  select(Species, X.Cover, Block.Name, Plot.Name) %>%
+  rename(Block_Name = Block.Name) %>%
+  rename(Subplot = Plot.Name) %>%
+  mutate(Year = "2022") %>%
+  left_join(plotinfo25) %>%
+  filter(Block_Type == "Wetland") %>%
+  mutate(X.Cover = case_when(Species == "Erodium spp." & X.Cover == 70 ~ 7, 
+                             Species == "Erodium spp." & X.Cover == 36 ~ 6, 
+                             T ~ X.Cover))  %>% #this is to fix a typo where erodium got super high cover...
+  group_by(Year, Block_Name, Subplot) %>%
+  mutate(Total_Cover = sum(X.Cover)) %>%
+  ungroup()
+
+W_23 <- data2023 %>%
+  select(Substrate.Species, X.Cover, Block_Name, Subplot) %>%
+  rename(Species = Substrate.Species) %>%
+  mutate(Year = "2023") %>%
+  left_join(plotinfo25) %>%
+  filter(Block_Type == "Wetland") %>%
+  group_by(Year, Block_Name, Subplot) %>%
+  mutate(Total_Cover = sum(X.Cover)) %>%
+  ungroup()
+
+W_24 <- data24 %>%
+  select(Substrate.Species, X.Cover, Block_Name, Subplot) %>%
+  rename(Species = Substrate.Species) %>%
+  mutate(Year = "2024") %>%
+  left_join(plotinfo25) %>%
+  filter(Block_Type == "Wetland") %>%
+  mutate(Species = case_when(Species == "Bare ground - gopher" ~ "Bare ground", T ~ Species)) %>%
+  group_by(Block_Name, Subplot, Species) %>%
+  mutate(X.Cover = sum(X.Cover)) %>%
+  ungroup() %>%
+  distinct() %>%
+  group_by(Year, Block_Name, Subplot) %>%
+  mutate(Total_Cover = sum(X.Cover)) %>%
+  ungroup() %>%
+  filter(Total_Cover > 99) #this removes SLP1_1B because cover is only 87...data error
+  
+W_25 <- data_1percent %>%
+  select(Latin, Cover, Block_Name, Subplot) %>%
+  rename(Species = Latin) %>%
+  rename(X.Cover = Cover) %>%
+  mutate(Year = "2025") %>%
+  left_join(plotinfo25) %>%
+  filter(Block_Type == "Wetland") %>%
+  group_by(Year, Block_Name, Subplot) %>%
+  mutate(Total_Cover = sum(X.Cover)) %>%
+  ungroup()
+
+W_26 <- data26 %>%
+  select(Latin, Cover, Block_Name, Subplot, STRIP) %>%
+  filter(STRIP != "L") %>%
+  filter(STRIP != "R") %>%
+  select(-STRIP) %>%
+  rename(Species = Latin) %>%
+  rename(X.Cover = Cover) %>%
+  mutate(Year = "2026") %>%
+  left_join(plotinfo25) %>%
+  filter(Block_Type == "Wetland")  %>%
+  group_by(Year, Block_Name, Subplot) %>%
+  mutate(Total_Cover = sum(X.Cover)) %>%
+  ungroup()
+
+W_all_years <- merge(W_22, W_23, all = T)
+W_all_years <- merge(W_all_years, W_24, all = T)
+W_all_years <- merge(W_all_years, W_25, all = T)
+W_all_years <- merge(W_all_years, W_26, all = T)
+
+W_all_years_final <- W_all_years %>%
+  mutate(Species = case_when(Species == "Aphyllon ssp." ~ "Aphyllon sp.", 
+                             Species == "bare ground" ~ "Bare ground and thatch",  
+                             Species == "Bare ground" ~ "Bare ground and thatch",
+                             Species == "Avena fatua" ~ "Avena spp.", 
+                             Species == "Brassica nigra" ~ "Brassica sp.", 
+                             Species == "Calystegia macrostegia ssp. cyclostegia" ~ "Calystegia macrostegia", 
+                             Species == "Cuscuta californica" ~ "Cuscuta sp.", 
+                             Species == "dead iceplant" ~ "Dead iceplant", 
+                             Species == "Diplacus longiflorus" ~ "Diplacus aurantiacus", 
+                             Species == "Dudleya ssp." ~ "Dudleya sp.", 
+                             Species == "Erodium botrys" ~ "Erodium spp.", 
+                             Species == "Erodium cicutarium" ~ "Erodium spp.",
+                             Species == "Erodium sp." ~ "Erodium spp.",
+                             Species == "Erodium ssp." ~ "Erodium spp.",
+                             Species == "Hirschfeldia incana" ~ "Brassica sp.",
+                             Species == "Lamarickia aurea" ~ "Lamarckia aurea",
+                             Species == "Medicago polymorpha" ~ "Medicago spp.",
+                             Species == "Medicago sp." ~ "Medicago spp.",
+                             Species == "Mysterious carex" ~ "Carex pansa",
+                             Species == "Pseudognaphalium bioletii" ~ "Pseudognaphalium biolettii",
+                             Species == "Pseudognaphalium bioletti" ~ "Pseudognaphalium biolettii",
+                             Species == "Pseudognaphalium canescens" ~ "Pseudognaphalium stramineum",
+                             Species == "Sonchus ssp." ~ "Sonchus spp.",
+                             Species == "Sonchus sp." ~ "Sonchus spp.",
+                             Species == "Spergularia sp." ~ "Spergularia spp.",
+                             Species == "Spergularia ssp." ~ "Spergularia spp.",
+                             Species == "Trifolium ssp." ~ "Trifolium sp.",
+                             Species == "thatch (non iceplant)" ~ "Bare ground and thatch",
+                             Species == "Thatch" ~ "Bare ground and thatch",
+                             T ~ Species)) %>%
+  group_by(Year, Block_Name, Subplot, Species) %>%
+  mutate(X.Cover = sum(X.Cover)) %>%
+  ungroup() %>%
+  distinct() %>%
+  group_by(Year, Block_Name, Subplot) %>%
+  mutate(Total_Cover = sum(X.Cover)) %>%
+  ungroup() %>%
+  select(-Water_Treat)
+
+#check species names
+print(unique(W_all_years_final$Species))
+
+W_species <- read.csv("W_Species.csv")
+
+## df should be good to go...
+
+#sanity check...2022 weird data...
+
+blocks_plots_years <- W_all_years_final %>%
+  select(Year, Block_Name, Subplot) %>%
+  mutate(Block_Plot = paste(Block_Name, Subplot, sep = "_")) %>%
+  distinct()
+
+#2022 all good
+blocks_plots_years_22 <- blocks_plots_years %>%
+  filter(Year == "2022")
+
+#2023 all good
+blocks_plots_years_23 <- blocks_plots_years %>%
+  filter(Year == "2023")
+
+#2024 all good
+blocks_plots_years_24 <- blocks_plots_years %>%
+  filter(Year == "2024")
+
+#2025 all good
+blocks_plots_years_25 <- blocks_plots_years %>%
+  filter(Year == "2025")
+
+#2026 all good
+blocks_plots_years_26 <- blocks_plots_years %>%
+  filter(Year == "2026")
+
+```
+
+```{r final useful df}
+#this gives me a good df to look at relative cover of desired wetland species 
+Desired_W_df <- W_all_years_final %>%
+  left_join(W_species) %>%
+  complete(Wet_Species, nesting(Year, Block_Name, Subplot, Primary_Treat, Native_Treat, DIP_Treat, Secondary_Treat, Total_Cover), fill = list(X.Cover = 0)) %>%
+  filter(Wet_Species == "1") %>%
+  group_by(Year, Block_Name, Subplot) %>%
+  mutate(Desired_Cover = sum(X.Cover)) %>%
+  ungroup() %>%
+  select(Year, Block_Name, Subplot, Desired_Cover, Total_Cover, Primary_Treat, Native_Treat, DIP_Treat, Secondary_Treat) %>%
+  distinct() %>%
+  mutate(Desired_Rel_Cover = Desired_Cover/Total_Cover + 0.00001)
+
+# ggline(Desired_W_df, "Year", "Desired_Rel_Cover", color = "Primary_Treat", add = "mean", facet.by = c("Secondary_Treat", "DIP_Treat"), linetype = "Native_Treat")
+
+Secondary_W_df <- W_all_years_final %>%
+  left_join(W_species) %>%
+  complete(Status, nesting(Year, Block_Name, Subplot, Primary_Treat, Native_Treat, DIP_Treat, Secondary_Treat, Total_Cover), fill = list(X.Cover = 0)) %>%
+  filter(Status == "Nonnative") %>%
+  mutate(Wet_Species = case_when(Species == "Carpobrotus edulis" ~ "C_edulis", T ~ "Secondary_Invader")) %>%
+  group_by(Year, Block_Name, Subplot, Wet_Species) %>%
+  mutate(Secondary_Cover = sum(X.Cover)) %>%
+  ungroup() %>%
+  select(Year, Block_Name, Subplot, Wet_Species, Secondary_Cover, Total_Cover, Primary_Treat, Native_Treat, DIP_Treat, Secondary_Treat) %>%
+  distinct() %>%
+  complete(Wet_Species, nesting(Year, Block_Name, Subplot, Primary_Treat, Native_Treat, DIP_Treat, Secondary_Treat, Total_Cover), 
+           fill = list(Secondary_Cover = 0)) %>%
+  pivot_wider(names_from = Wet_Species, values_from = Secondary_Cover) %>%
+  mutate(Secondary_Rel_Cover = Secondary_Invader/Total_Cover+ 0.00001) %>%
+  mutate(CAED_Rel_Cover = C_edulis/Total_Cover+ 0.00001) %>%
+  select(Year, Block_Name, Subplot, CAED_Rel_Cover, Secondary_Rel_Cover, C_edulis, Secondary_Invader)
+
+# ggline(Secondary_W_df, "Year", "Secondary_Rel_Cover", color = "Primary_Treat", add = "mean", facet.by = c("Wet_Species"), linetype = "Secondary_Treat")
+
+W_df <- Desired_W_df %>%
+  left_join(Secondary_W_df) %>%
+  filter(Block_Name != "WHN1") %>% #removing high native blocks
+  filter(Block_Name != "WHN2") %>%
+  mutate(Dominant_Cover = case_when(CAED_Rel_Cover > (Desired_Rel_Cover + Secondary_Rel_Cover) ~ "CAED", 
+                                    Secondary_Rel_Cover > (Desired_Rel_Cover + CAED_Rel_Cover) ~ "Secondary", 
+                                    Desired_Rel_Cover > (CAED_Rel_Cover + Secondary_Rel_Cover) ~ "Native", 
+                                    T ~ "Mixed")) %>%
+  pivot_longer(cols = c(Desired_Rel_Cover, Secondary_Rel_Cover, CAED_Rel_Cover), names_to = "Cover_Type", values_to = "Relative_Cover")
+
+W_df_26 <- W_df %>%
+  filter(Year == "2026")
+
+ggboxplot(W_df_26, "Cover_Type", "Relative_Cover", fill = "Dominant_Cover", facet.by = "Primary_Treat", add = "jitter", add.params = list(color = "Dominant_Cover"))
+
+W_df_controls <- Desired_W_df %>%
+  left_join(Secondary_W_df) %>% 
+  filter(Block_Name != "WHN1") %>% #removing high native blocks
+  filter(Block_Name != "WHN2") %>%
+  mutate(Primary_Treat = case_when(Primary_Treat == "NONE" ~ "Control", T ~ Primary_Treat)) %>%
+  pivot_longer(cols = c(Desired_Rel_Cover, Secondary_Rel_Cover, CAED_Rel_Cover), names_to = "Cover_Type", values_to = "Relative_Cover")
+
+W_Gly <- W_df_controls %>%
+  filter(Primary_Treat == "GLY" | Primary_Treat == "Control")
+
+W_VAST <- W_df_controls %>%
+  filter(Primary_Treat == "VAST" | Primary_Treat == "Control")
+
+W_SOLAR <- W_df_controls %>%
+  filter(Primary_Treat == "SOLAR" | Primary_Treat == "Control")
+
+ggline(W_Gly, "Year", "Relative_Cover", facet.by = "Cover_Type", add = "mean", linetype = "Primary_Treat", color = "Secondary_Treat") + coord_cartesian(ylim = c(0,1))
+
+ggline(W_VAST, "Year", "Relative_Cover", facet.by = "Cover_Type", add = "mean", linetype = "Primary_Treat", color = "Secondary_Treat") + coord_cartesian(ylim = c(0,1))
+
+ggline(W_SOLAR, "Year", "Relative_Cover", facet.by = "Cover_Type", add = "mean", linetype = "Primary_Treat", color = "Secondary_Treat") + coord_cartesian(ylim = c(0,1))
+
+# ggline(W_df, "Year", "Desired_Rel_Cover", color = "Primary_Treat", add = "mean", facet.by = c("Secondary_Treat", "DIP_Treat"), linetype = "Native_Treat")
+# ggline(W_df, "Year", "Secondary_Rel_Cover", color = "Primary_Treat", add = "mean", facet.by = c("Secondary_Treat", "DIP_Treat"), linetype = "Native_Treat")
+# ggline(W_df, "Year", "CAED_Rel_Cover", color = "Primary_Treat", add = "mean", facet.by = c("Secondary_Treat", "DIP_Treat"), linetype = "Native_Treat")
+```
+
+
+```{r models}
+#this is not the right model...but moving in the right direction
+beta_model_wet <- glmmTMB(Desired_Rel_Cover ~ Year*(Primary_Treat + Secondary_Treat + DIP_Treat + Native_Treat) + (1|Block_Name/Subplot), data = W_df, family = beta_family(link = "logit"), dispformula = ~ Year*(Primary_Treat + Secondary_Treat + DIP_Treat + Native_Treat))
+
+summary(beta_model_wet)
+```
+
